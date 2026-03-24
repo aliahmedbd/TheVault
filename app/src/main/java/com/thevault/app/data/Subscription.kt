@@ -1,7 +1,11 @@
 package com.thevault.app.data
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "subscriptions")
 data class Subscription(
-    val id: String,
+    @PrimaryKey val id: String,
     val name: String,
     val price: Double,
     val billingCycle: String,

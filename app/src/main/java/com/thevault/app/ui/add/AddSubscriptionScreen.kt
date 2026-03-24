@@ -19,15 +19,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.thevault.app.ui.theme.TheVaultTheme
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddSubscriptionScreen(onNavigateBack: () -> Unit) {
+fun AddSubscriptionScreen(
+    onNavigateBack: () -> Unit,
+    viewModel: AddSubscriptionViewModel = hiltViewModel()
+) {
     var name by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var renewalDate by remember { mutableStateOf("") }
     var manageUrl by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        viewModel.event.collectLatest { event ->
+            when (event) {
+                is AddSubscriptionEvent.SaveSuccess -> onNavigateBack()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -130,7 +143,7 @@ fun AddSubscriptionScreen(onNavigateBack: () -> Unit) {
             // Action Buttons
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(
-                    onClick = { },
+                    onClick = { viewModel.saveSubscription(name, price, renewalDate) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp),

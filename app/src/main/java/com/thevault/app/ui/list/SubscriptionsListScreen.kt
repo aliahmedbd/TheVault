@@ -19,13 +19,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.thevault.app.data.INITIAL_SUBSCRIPTIONS
 import com.thevault.app.ui.dashboard.SubscriptionListItem
 import com.thevault.app.ui.theme.TheVaultTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubscriptionsListScreen(onNavigateToDetails: (String) -> Unit) {
+fun SubscriptionsListScreen(
+    onNavigateToDetails: (String) -> Unit,
+    viewModel: SubscriptionsListViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsState()
     var search by remember { mutableStateOf("") }
     val filters = listOf("All", "Monthly", "Yearly", "Entertainment", "SaaS", "Tech")
 
@@ -99,7 +104,7 @@ fun SubscriptionsListScreen(onNavigateToDetails: (String) -> Unit) {
             }
 
             // List
-            items(INITIAL_SUBSCRIPTIONS) { sub ->
+            items(state.subscriptions) { sub ->
                 SubscriptionListItem(sub, onNavigateToDetails)
             }
 
