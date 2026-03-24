@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thevault.app.data.INITIAL_SUBSCRIPTIONS
 import com.thevault.app.ui.dashboard.SubscriptionListItem
-import com.thevault.app.ui.dashboard.VaultBottomBar
 import com.thevault.app.ui.theme.TheVaultTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,9 +40,6 @@ fun SubscriptionsListScreen(onNavigateToDetails: (String) -> Unit) {
                 }
             )
         },
-        bottomBar = { VaultBottomBar(currentRoute = "subscriptions", onNavigate = { route ->
-            // Handle nav
-        }) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { },

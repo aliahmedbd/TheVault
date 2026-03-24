@@ -33,15 +33,11 @@ import com.thevault.app.ui.theme.TheVaultTheme
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
-    onNavigateToAdd: () -> Unit,
-    onNavigateToSubscriptions: () -> Unit,
     onNavigateToDetails: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     DashboardContent(
         state = state,
-        onNavigateToAdd = onNavigateToAdd,
-        onNavigateToSubscriptions = onNavigateToSubscriptions,
         onNavigateToDetails = onNavigateToDetails
     )
 }
@@ -49,19 +45,10 @@ fun DashboardScreen(
 @Composable
 fun DashboardContent(
     state: DashboardState,
-    onNavigateToAdd: () -> Unit,
-    onNavigateToSubscriptions: () -> Unit,
     onNavigateToDetails: (String) -> Unit
 ) {
     Scaffold(
-        topBar = { VaultTopBar() },
-        bottomBar = { VaultBottomBar(currentRoute = "dashboard", onNavigate = { route ->
-            when(route) {
-                "add" -> onNavigateToAdd()
-                "subscriptions" -> onNavigateToSubscriptions()
-                "dashboard" -> {}
-            }
-        }) }
+        topBar = { VaultTopBar() }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -423,8 +410,6 @@ fun DashboardPreview() {
                 totalMonthlySpend = 124.99,
                 savedThisMonth = 24.0
             ),
-            onNavigateToAdd = {},
-            onNavigateToSubscriptions = {},
             onNavigateToDetails = {}
         )
     }

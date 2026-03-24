@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.thevault.app.data.INITIAL_SUBSCRIPTIONS
-import com.thevault.app.ui.dashboard.VaultBottomBar
 import com.thevault.app.ui.dashboard.getIconForName
 import com.thevault.app.ui.theme.TheVaultTheme
 
@@ -45,10 +44,7 @@ fun SubscriptionDetailsScreen(id: String, onNavigateBack: () -> Unit) {
                     }
                 }
             )
-        },
-        bottomBar = { VaultBottomBar(currentRoute = "subscriptions", onNavigate = { route ->
-            if (route == "dashboard") onNavigateBack()
-        }) }
+        }
     ) { padding ->
         Column(
             modifier = Modifier
