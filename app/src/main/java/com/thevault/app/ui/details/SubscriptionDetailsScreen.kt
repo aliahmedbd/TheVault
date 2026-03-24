@@ -3,6 +3,7 @@ package com.thevault.app.ui.details
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -14,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -86,7 +86,7 @@ fun SubscriptionDetailsScreen(id: String, onNavigateBack: () -> Unit) {
                         Column {
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(full = true))
+                                    .clip(CircleShape)
                                     .background(Color(0xFF8FEEFC))
                                     .padding(horizontal = 12.dp, vertical = 4.dp)
                             ) {

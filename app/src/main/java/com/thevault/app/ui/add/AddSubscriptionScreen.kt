@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,7 +27,6 @@ fun AddSubscriptionScreen(onNavigateBack: () -> Unit) {
     var price by remember { mutableStateOf("") }
     var renewalDate by remember { mutableStateOf("") }
     var manageUrl by remember { mutableStateOf("") }
-    var alertTiming by remember { mutableStateOf("3 days before") }
 
     Scaffold(
         topBar = {

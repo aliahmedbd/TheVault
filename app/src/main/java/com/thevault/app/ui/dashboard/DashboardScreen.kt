@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -93,7 +94,7 @@ fun VaultTopBar() {
             Box(
                 modifier = Modifier
                     .size(32.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(CircleShape)
                     .background(Color.LightGray)
             ) {
                 AsyncImage(
@@ -144,18 +145,17 @@ fun SpendHeroSection(total: Double, count: Int, saved: Double) {
             }
             Spacer(modifier = Modifier.height(32.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                InfoCard(label = "SUBSCRIPTIONS", value = count.toString())
-                InfoCard(label = "SAVED THIS MONTH", value = "$${saved.toInt()}.00")
+                InfoCard(label = "SUBSCRIPTIONS", value = count.toString(), modifier = Modifier.weight(1f))
+                InfoCard(label = "SAVED THIS MONTH", value = "$${saved.toInt()}.00", modifier = Modifier.weight(1f))
             }
         }
     }
 }
 
 @Composable
-fun InfoCard(label: String, value: String) {
+fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
-            .weight(1f)
+        modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White.copy(alpha = 0.1f))
             .padding(16.dp)
@@ -239,7 +239,7 @@ fun RenewalCard(sub: Subscription) {
                 }
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(full = true))
+                        .clip(CircleShape)
                         .background(Color(0xFF9C4400))
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 ) {
