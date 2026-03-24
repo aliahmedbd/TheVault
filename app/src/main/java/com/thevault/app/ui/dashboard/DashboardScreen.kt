@@ -21,11 +21,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.thevault.app.data.INITIAL_SUBSCRIPTIONS
 import com.thevault.app.data.Subscription
+import com.thevault.app.ui.theme.TheVaultTheme
 
 @Composable
 fun DashboardScreen(
@@ -35,7 +38,21 @@ fun DashboardScreen(
     onNavigateToDetails: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    DashboardContent(
+        state = state,
+        onNavigateToAdd = onNavigateToAdd,
+        onNavigateToSubscriptions = onNavigateToSubscriptions,
+        onNavigateToDetails = onNavigateToDetails
+    )
+}
 
+@Composable
+fun DashboardContent(
+    state: DashboardState,
+    onNavigateToAdd: () -> Unit,
+    onNavigateToSubscriptions: () -> Unit,
+    onNavigateToDetails: (String) -> Unit
+) {
     Scaffold(
         topBar = { VaultTopBar() },
         bottomBar = { VaultBottomBar(currentRoute = "dashboard", onNavigate = { route ->
@@ -393,5 +410,22 @@ fun getIconForName(name: String): ImageVector {
         "package" -> Icons.Default.ShoppingCart
         "database" -> Icons.Default.Build
         else -> Icons.Default.Star
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DashboardPreview() {
+    TheVaultTheme {
+        DashboardContent(
+            state = DashboardState(
+                subscriptions = INITIAL_SUBSCRIPTIONS,
+                totalMonthlySpend = 124.99,
+                savedThisMonth = 24.0
+            ),
+            onNavigateToAdd = {},
+            onNavigateToSubscriptions = {},
+            onNavigateToDetails = {}
+        )
     }
 }

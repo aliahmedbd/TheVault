@@ -16,11 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thevault.app.data.INITIAL_SUBSCRIPTIONS
 import com.thevault.app.ui.dashboard.SubscriptionListItem
 import com.thevault.app.ui.dashboard.VaultBottomBar
+import com.thevault.app.ui.theme.TheVaultTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,5 +109,13 @@ fun SubscriptionsListScreen(onNavigateToDetails: (String) -> Unit) {
 
             item { Spacer(modifier = Modifier.height(32.dp)) }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SubscriptionsListPreview() {
+    TheVaultTheme {
+        SubscriptionsListScreen(onNavigateToDetails = {})
     }
 }

@@ -16,12 +16,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.thevault.app.data.INITIAL_SUBSCRIPTIONS
 import com.thevault.app.ui.dashboard.VaultBottomBar
 import com.thevault.app.ui.dashboard.getIconForName
+import com.thevault.app.ui.theme.TheVaultTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -194,5 +196,13 @@ fun HistoryItem(price: Double) {
                 Text("PAID", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF006972))
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SubscriptionDetailsPreview() {
+    TheVaultTheme {
+        SubscriptionDetailsScreen(id = "1", onNavigateBack = {})
     }
 }
