@@ -1,0 +1,9 @@
+{
+  "name": "the-vault-android",
+  "version": "1.0.0",
+  "description": "Android project for The Vault",
+  "scripts": {
+    "build": "echo 'Android project build handled by Gradle'",
+    "dev": "echo 'Android project dev handled by Android Studio'"
+  }
+}

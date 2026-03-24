@@ -1,0 +1,2 @@
+rootProject.name = "TheVault"
+include ':app'
