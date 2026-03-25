@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.thevault.app.data.INITIAL_SUBSCRIPTIONS
 import com.thevault.app.data.Subscription
 import com.thevault.app.ui.theme.TheVaultTheme
 
@@ -50,31 +49,62 @@ fun DashboardContent(
     Scaffold(
         topBar = { VaultTopBar() }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(32.dp)
-        ) {
-            item { Spacer(modifier = Modifier.height(8.dp)) }
-
-            // Monthly Spend Hero
-            item {
-                SpendHeroSection(state.totalMonthlySpend, state.subscriptions.size, state.savedThisMonth)
+        if (state.subscriptions.isEmpty() && !state.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Default.AccountBalanceWallet,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = Color.LightGray
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "No subscriptions yet",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.Gray
+                    )
+                    Text(
+                        "Tap '+' to add your first one",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.LightGray
+                    )
+                }
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(32.dp)
+            ) {
+                item { Spacer(modifier = Modifier.height(8.dp)) }
 
-            // Upcoming Renewals
-            item {
-                UpcomingRenewalsSection(state.subscriptions)
+                // Monthly Spend Hero
+                item {
+                    SpendHeroSection(state.totalMonthlySpend, state.subscriptions.size, state.savedThisMonth)
+                }
+
+                // Upcoming Renewals
+                if (state.subscriptions.isNotEmpty()) {
+                    item {
+                        UpcomingRenewalsSection(state.subscriptions)
+                    }
+                }
+
+                // Active Subscriptions
+                item {
+                    ActiveSubscriptionsSection(state.subscriptions, onNavigateToDetails)
+                }
+
+                item { Spacer(modifier = Modifier.height(32.dp)) }
             }
-
-            // Active Subscriptions
-            item {
-                ActiveSubscriptionsSection(state.subscriptions, onNavigateToDetails)
-            }
-
-            item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }
 }
@@ -403,12 +433,37 @@ fun getIconForName(name: String): ImageVector {
 @Preview(showBackground = true)
 @Composable
 fun DashboardPreview() {
+    val sampleSub = Subscription(
+        id = "1",
+        name = "Netflix",
+        price = 15.99,
+        billingCycle = "Monthly",
+        category = "Entertainment",
+        status = "Active",
+        nextBillingDate = "2024-01-01",
+        icon = "play_circle"
+    )
     TheVaultTheme {
         DashboardContent(
             state = DashboardState(
-                subscriptions = INITIAL_SUBSCRIPTIONS,
-                totalMonthlySpend = 124.99,
-                savedThisMonth = 24.0
+                subscriptions = listOf(sampleSub),
+                totalMonthlySpend = 15.99,
+                savedThisMonth = 0.0
+            ),
+            onNavigateToDetails = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DashboardEmptyPreview() {
+    TheVaultTheme {
+        DashboardContent(
+            state = DashboardState(
+                subscriptions = emptyList(),
+                totalMonthlySpend = 0.0,
+                savedThisMonth = 0.0
             ),
             onNavigateToDetails = {}
         )

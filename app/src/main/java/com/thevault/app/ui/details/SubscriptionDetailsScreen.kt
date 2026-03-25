@@ -10,6 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,15 +21,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.thevault.app.data.INITIAL_SUBSCRIPTIONS
+import com.thevault.app.data.Subscription
 import com.thevault.app.ui.dashboard.getIconForName
 import com.thevault.app.ui.theme.TheVaultTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SubscriptionDetailsScreen(id: String, onNavigateBack: () -> Unit) {
-    val sub = INITIAL_SUBSCRIPTIONS.find { it.id == id } ?: INITIAL_SUBSCRIPTIONS[0]
+fun SubscriptionDetailsScreen(
+    id: String,
+    onNavigateBack: () -> Unit,
+    viewModel: SubscriptionDetailsViewModel = hiltViewModel()
+) {
+    val state by viewModel.state.collectAsState()
+    val sub = state.subscription
 
     Scaffold(
         topBar = {
@@ -46,41 +54,59 @@ fun SubscriptionDetailsScreen(id: String, onNavigateBack: () -> Unit) {
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(32.dp)
-        ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Hero
-            Box(
+        if (sub == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(topStart = 48.dp, topEnd = 24.dp, bottomStart = 48.dp, bottomEnd = 24.dp))
-                    .background(Color(0xFFF0F4FD))
-                    .padding(32.dp)
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(32.dp)
             ) {
-                Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    Row(verticalAlignment = Alignment.Top) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(Color.White)
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Hero
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(topStart = 48.dp, topEnd = 24.dp, bottomStart = 48.dp, bottomEnd = 24.dp))
+                        .background(Color(0xFFF0F4FD))
+                        .padding(24.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
                         ) {
-                            if (sub.logoUrl != null) {
-                                AsyncImage(model = sub.logoUrl, contentDescription = null)
-                            } else {
-                                Icon(getIconForName(sub.icon), contentDescription = null, tint = Color(0xFF004D64), modifier = Modifier.size(40.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(Color.White)
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (sub.logoUrl != null) {
+                                    AsyncImage(model = sub.logoUrl, contentDescription = null)
+                                } else {
+                                    Icon(getIconForName(sub.icon), contentDescription = null, tint = Color(0xFF004D64), modifier = Modifier.size(40.dp))
+                                }
+                            }
+
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text("MONTHLY SPEND", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3F484D))
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text("$", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF004D64))
+                                    Text(sub.price.toInt().toString(), style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black, color = Color(0xFF004D64))
+                                }
                             }
                         }
-                        Spacer(modifier = Modifier.width(24.dp))
+
                         Column {
                             Box(
                                 modifier = Modifier
@@ -90,81 +116,83 @@ fun SubscriptionDetailsScreen(id: String, onNavigateBack: () -> Unit) {
                             ) {
                                 Text("ACTIVE", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF006D77))
                             }
-                            Text(sub.name, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black, color = Color(0xFF004D64))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                sub.name,
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF004D64)
+                            )
                             Text(sub.category + " Plan", color = Color(0xFF3F484D))
                         }
                     }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text("MONTHLY SPEND", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3F484D))
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            Text("$", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF004D64))
-                            Text(sub.price.toInt().toString(), style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black, color = Color(0xFF004D64))
+                }
+
+                // Actions
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1.5f)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(Brush.linearGradient(listOf(Color(0xFF004D64), Color(0xFF006684))))
+                            .padding(16.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.2f)).padding(8.dp)) {
+                                Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("Provider Portal", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
+                                Text("Manage", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
+                            }
                         }
                     }
-                }
-            }
-
-            // Actions
-            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                Box(
-                    modifier = Modifier
-                        .weight(2f)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Brush.linearGradient(listOf(Color(0xFF004D64), Color(0xFF006684))))
-                        .padding(24.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.2f)).padding(12.dp)) {
-                            Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White)
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(Color.White)
+                            .padding(16.dp)
+                    ) {
                         Column {
-                            Text("Provider Portal", fontSize = 12.sp, color = Color.White.copy(alpha = 0.8f))
-                            Text("Manage on ${sub.name}.com", fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("NEXT BILLING", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3F484D))
+                            Text("Oct 24", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF004D64))
                         }
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color.White)
-                        .padding(24.dp)
+
+                // History
+                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("Payment History", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        TextButton(onClick = { }) {
+                            Text("Download All", color = Color(0xFF006972))
+                        }
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        repeat(3) {
+                            HistoryItem(sub.price)
+                        }
+                    }
+                }
+
+                // Delete
+                TextButton(
+                    onClick = { 
+                        viewModel.deleteSubscription()
+                        onNavigateBack()
+                    },
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFBA1A1A))
                 ) {
-                    Column {
-                        Text("NEXT BILLING", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3F484D))
-                        Text("Oct 24", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color(0xFF004D64))
-                    }
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Unlink Subscription from Vault", fontWeight = FontWeight.Bold)
                 }
-            }
 
-            // History
-            Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Payment History", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    TextButton(onClick = { }) {
-                        Text("Download All", color = Color(0xFF006972))
-                    }
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    repeat(3) {
-                        HistoryItem(sub.price)
-                    }
-                }
+                Spacer(modifier = Modifier.height(32.dp))
             }
-
-            // Delete
-            TextButton(
-                onClick = { },
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFBA1A1A))
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Unlink Subscription from Vault", fontWeight = FontWeight.Bold)
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -184,11 +212,11 @@ fun HistoryItem(price: Double) {
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text("September 24, 2023", fontWeight = FontWeight.Bold)
+                Text("September 24, 2023", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Text("Invoice #NFLX-92834", fontSize = 12.sp, color = Color(0xFF3F484D))
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("$${price}", fontWeight = FontWeight.Bold, color = Color(0xFF004D64))
+                Text("$${price}", fontWeight = FontWeight.Bold, color = Color(0xFF004D64), fontSize = 14.sp)
                 Text("PAID", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF006972))
             }
         }
@@ -198,6 +226,16 @@ fun HistoryItem(price: Double) {
 @Preview(showBackground = true)
 @Composable
 fun SubscriptionDetailsPreview() {
+    val sampleSub = Subscription(
+        id = "1",
+        name = "Google One",
+        price = 1.99,
+        billingCycle = "Monthly",
+        category = "Cloud",
+        status = "Active",
+        nextBillingDate = "2024-01-01",
+        icon = "cloud"
+    )
     TheVaultTheme {
         SubscriptionDetailsScreen(id = "1", onNavigateBack = {})
     }

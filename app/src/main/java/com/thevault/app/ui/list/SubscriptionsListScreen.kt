@@ -20,7 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.thevault.app.data.INITIAL_SUBSCRIPTIONS
+import com.thevault.app.data.Subscription
 import com.thevault.app.ui.dashboard.SubscriptionListItem
 import com.thevault.app.ui.theme.TheVaultTheme
 
@@ -56,59 +56,65 @@ fun SubscriptionsListScreen(
             }
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            item { Spacer(modifier = Modifier.height(8.dp)) }
-
-            item {
-                Column {
-                    Text("Subscriptions", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
-                    Text("Manage your recurring digital lifestyle.", color = Color(0xFF3F484D))
-                }
+        if (state.subscriptions.isEmpty() && !state.isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text("Your vault is empty.", color = Color.Gray)
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                item { Spacer(modifier = Modifier.height(8.dp)) }
 
-            // Search
-            item {
-                TextField(
-                    value = search,
-                    onValueChange = { search = it },
-                    placeholder = { Text("Search services...") },
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)),
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color(0xFFDEE3EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color(0xFF004D64)
-                    )
-                )
-            }
-
-            // Filters
-            item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(filters) { filter ->
-                        FilterChip(
-                            selected = filter == "All",
-                            onClick = { },
-                            label = { Text(filter, fontWeight = FontWeight.Bold) },
-                            shape = CircleShape
-                        )
+                item {
+                    Column {
+                        Text("Subscriptions", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
+                        Text("Manage your recurring digital lifestyle.", color = Color(0xFF3F484D))
                     }
                 }
-            }
 
-            // List
-            items(state.subscriptions) { sub ->
-                SubscriptionListItem(sub, onNavigateToDetails)
-            }
+                // Search
+                item {
+                    TextField(
+                        value = search,
+                        onValueChange = { search = it },
+                        placeholder = { Text("Search services...") },
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)),
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = Color(0xFFDEE3EB),
+                            focusedContainerColor = Color.White,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            focusedIndicatorColor = Color(0xFF004D64)
+                        )
+                    )
+                }
 
-            item { Spacer(modifier = Modifier.height(32.dp)) }
+                // Filters
+                item {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(filters) { filter ->
+                            FilterChip(
+                                selected = filter == "All",
+                                onClick = { },
+                                label = { Text(filter, fontWeight = FontWeight.Bold) },
+                                shape = CircleShape
+                            )
+                        }
+                    }
+                }
+
+                // List
+                items(state.subscriptions) { sub ->
+                    SubscriptionListItem(sub, onNavigateToDetails)
+                }
+
+                item { Spacer(modifier = Modifier.height(32.dp)) }
+            }
         }
     }
 }
@@ -116,6 +122,16 @@ fun SubscriptionsListScreen(
 @Preview(showBackground = true)
 @Composable
 fun SubscriptionsListPreview() {
+    val sampleSub = Subscription(
+        id = "1",
+        name = "Netflix",
+        price = 15.99,
+        billingCycle = "Monthly",
+        category = "Entertainment",
+        status = "Active",
+        nextBillingDate = "2024-01-01",
+        icon = "play_circle"
+    )
     TheVaultTheme {
         SubscriptionsListScreen(onNavigateToDetails = {})
     }
