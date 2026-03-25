@@ -143,7 +143,7 @@ fun AddSubscriptionScreen(
             // Action Buttons
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(
-                    onClick = { viewModel.saveSubscription(name, price, renewalDate) },
+                    onClick = { viewModel.saveSubscription(name, price, renewalDate, manageUrl) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp),

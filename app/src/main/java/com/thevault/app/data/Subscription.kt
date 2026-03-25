@@ -13,5 +13,6 @@ data class Subscription(
     val status: String,
     val nextBillingDate: String,
     val icon: String,
-    val logoUrl: String? = null
+    val logoUrl: String? = null,
+    val manageUrl: String? = null
 )

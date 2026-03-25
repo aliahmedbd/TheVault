@@ -19,7 +19,7 @@ class AddSubscriptionViewModel @Inject constructor(
     private val _event = MutableSharedFlow<AddSubscriptionEvent>()
     val event = _event.asSharedFlow()
 
-    fun saveSubscription(name: String, price: String, renewalDate: String) {
+    fun saveSubscription(name: String, price: String, renewalDate: String, manageUrl: String) {
         if (name.isBlank() || price.isBlank() || renewalDate.isBlank()) return
 
         viewModelScope.launch {
@@ -31,7 +31,8 @@ class AddSubscriptionViewModel @Inject constructor(
                 category = "General", // Default for now
                 status = "Active",
                 nextBillingDate = renewalDate,
-                icon = "star" // Default icon
+                icon = "star", // Default icon
+                manageUrl = if (manageUrl.isNotBlank()) manageUrl else null
             )
             repository.addSubscription(subscription)
             _event.emit(AddSubscriptionEvent.SaveSuccess)

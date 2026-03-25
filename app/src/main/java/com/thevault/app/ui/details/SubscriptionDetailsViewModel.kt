@@ -18,7 +18,7 @@ class SubscriptionDetailsViewModel @Inject constructor(
 
     private val id: String = checkNotNull(savedStateHandle["id"])
 
-    private val _state = MutableStateFlow(SubscriptionDetailsState())
+    private val _state = MutableStateFlow(SubscriptionDetailsState(isLoading = true))
     val state: StateFlow<SubscriptionDetailsState> = _state.asStateFlow()
 
     init {
@@ -30,7 +30,7 @@ class SubscriptionDetailsViewModel @Inject constructor(
             repository.getAllSubscriptions()
                 .map { list -> list.find { it.id == id } }
                 .collect { sub ->
-                    _state.update { it.copy(subscription = sub) }
+                    _state.update { it.copy(subscription = sub, isLoading = false) }
                 }
         }
     }
@@ -43,5 +43,6 @@ class SubscriptionDetailsViewModel @Inject constructor(
 }
 
 data class SubscriptionDetailsState(
-    val subscription: Subscription? = null
+    val subscription: Subscription? = null,
+    val isLoading: Boolean = false
 )

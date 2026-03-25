@@ -1,6 +1,7 @@
 package com.thevault.app.ui.details
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,7 +29,6 @@ import com.thevault.app.data.Subscription
 import com.thevault.app.ui.dashboard.getIconForName
 import com.thevault.app.ui.theme.TheVaultTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscriptionDetailsScreen(
     id: String,
@@ -35,7 +36,26 @@ fun SubscriptionDetailsScreen(
     viewModel: SubscriptionDetailsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    
+    SubscriptionDetailsContent(
+        state = state,
+        onNavigateBack = onNavigateBack,
+        onDeleteClick = {
+            viewModel.deleteSubscription()
+            onNavigateBack()
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SubscriptionDetailsContent(
+    state: SubscriptionDetailsState,
+    onNavigateBack: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
     val sub = state.subscription
+    val uriHandler = LocalUriHandler.current
 
     Scaffold(
         topBar = {
@@ -55,8 +75,12 @@ fun SubscriptionDetailsScreen(
         }
     ) { padding ->
         if (sub == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                if (state.isLoading) {
+                    CircularProgressIndicator()
+                } else {
+                    Text("Subscription not found")
+                }
             }
         } else {
             Column(
@@ -135,6 +159,20 @@ fun SubscriptionDetailsScreen(
                             .weight(1.5f)
                             .clip(RoundedCornerShape(24.dp))
                             .background(Brush.linearGradient(listOf(Color(0xFF004D64), Color(0xFF006684))))
+                            .clickable(enabled = sub.manageUrl != null) {
+                                sub.manageUrl?.let { url ->
+                                    val formattedUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                                        "https://$url"
+                                    } else {
+                                        url
+                                    }
+                                    try {
+                                        uriHandler.openUri(formattedUrl)
+                                    } catch (e: Exception) {
+                                        // Handle error
+                                    }
+                                }
+                            }
                             .padding(16.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -144,7 +182,7 @@ fun SubscriptionDetailsScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text("Provider Portal", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
-                                Text("Manage", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
+                                Text(if (sub.manageUrl != null) "Manage" else "No URL", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
                             }
                         }
                     }
@@ -179,10 +217,7 @@ fun SubscriptionDetailsScreen(
 
                 // Delete
                 TextButton(
-                    onClick = { 
-                        viewModel.deleteSubscription()
-                        onNavigateBack()
-                    },
+                    onClick = onDeleteClick,
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFBA1A1A))
                 ) {
@@ -234,9 +269,14 @@ fun SubscriptionDetailsPreview() {
         category = "Cloud",
         status = "Active",
         nextBillingDate = "2024-01-01",
-        icon = "cloud"
+        icon = "cloud",
+        manageUrl = "https://one.google.com"
     )
     TheVaultTheme {
-        SubscriptionDetailsScreen(id = "1", onNavigateBack = {})
+        SubscriptionDetailsContent(
+            state = SubscriptionDetailsState(subscription = sampleSub),
+            onNavigateBack = {},
+            onDeleteClick = {}
+        )
     }
 }
