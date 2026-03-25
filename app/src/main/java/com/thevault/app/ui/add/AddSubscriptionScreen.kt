@@ -1,6 +1,8 @@
 package com.thevault.app.ui.add
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +24,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.thevault.app.ui.theme.TheVaultTheme
 import kotlinx.coroutines.flow.collectLatest
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,12 +37,39 @@ fun AddSubscriptionScreen(
     var price by remember { mutableStateOf("") }
     var renewalDate by remember { mutableStateOf("") }
     var manageUrl by remember { mutableStateOf("") }
+    
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
 
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
             when (event) {
                 is AddSubscriptionEvent.SaveSuccess -> onNavigateBack()
             }
+        }
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        renewalDate = sdf.format(Date(millis))
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 
@@ -97,7 +128,14 @@ fun AddSubscriptionScreen(
                             VaultTextField(label = "Monthly Price", value = price, onValueChange = { price = it }, placeholder = "0.00", prefix = "$")
                         }
                         Box(modifier = Modifier.weight(1f)) {
-                            VaultTextField(label = "Renewal Date", value = renewalDate, onValueChange = { renewalDate = it }, placeholder = "YYYY-MM-DD")
+                            VaultTextField(
+                                label = "Renewal Date",
+                                value = renewalDate,
+                                onValueChange = { renewalDate = it },
+                                placeholder = "YYYY-MM-DD",
+                                readOnly = true,
+                                modifier = Modifier.clickable { showDatePicker = true }
+                            )
                         }
                     }
 
@@ -172,23 +210,37 @@ fun AddSubscriptionScreen(
 }
 
 @Composable
-fun VaultTextField(label: String, value: String, onValueChange: (String) -> Unit, placeholder: String, prefix: String? = null) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+fun VaultTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    prefix: String? = null,
+    readOnly: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF3F484D))
         TextField(
             value = value,
             onValueChange = onValueChange,
+            readOnly = readOnly,
             placeholder = { Text(placeholder, color = Color(0xFF70787E).copy(alpha = 0.5f)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp)),
+            enabled = !readOnly,
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = Color(0xFFDEE3EB),
                 focusedContainerColor = Color.White,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color(0xFF004D64)
+                focusedIndicatorColor = Color(0xFF004D64),
+                disabledContainerColor = Color(0xFFDEE3EB),
+                disabledIndicatorColor = Color.Transparent,
+                disabledTextColor = LocalContentColor.current
             ),
-            prefix = prefix?.let { { Text(it, fontWeight = FontWeight.Bold, color = Color(0xFF004D64)) } }
+            prefix = prefix?.let { { Text(it, fontWeight = FontWeight.Bold, color = Color(0xFF004D64)) } },
+            interactionSource = remember { MutableInteractionSource() }
         )
     }
 }
