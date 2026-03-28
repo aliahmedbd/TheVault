@@ -10,10 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,6 +56,31 @@ fun SubscriptionDetailsContent(
 ) {
     val sub = state.subscription
     val uriHandler = LocalUriHandler.current
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Unlink Subscription") },
+            text = { Text("Are you sure you want to remove this subscription from your vault? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDeleteClick()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFBA1A1A))
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -193,7 +215,7 @@ fun SubscriptionDetailsContent(
                             Box(modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.2f)).padding(8.dp)) {
                                 Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                             }
-                            Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text("Provider Portal", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
                                 Text(if (sub.manageUrl != null) "Manage" else "No URL", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
@@ -214,9 +236,24 @@ fun SubscriptionDetailsContent(
                     }
                 }
 
+                // History
+                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("Payment History", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        TextButton(onClick = { }) {
+                            Text("Download All", color = Color(0xFF006972))
+                        }
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        repeat(3) {
+                            HistoryItem(sub.price)
+                        }
+                    }
+                }
+
                 // Delete
                 TextButton(
-                    onClick = onDeleteClick,
+                    onClick = { showDeleteDialog = true },
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFBA1A1A))
                 ) {
@@ -226,6 +263,32 @@ fun SubscriptionDetailsContent(
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun HistoryItem(price: Double) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFE4E8F1)).padding(8.dp)) {
+                Icon(Icons.Default.DateRange, contentDescription = null)
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text("September 24, 2023", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text("Invoice #NFLX-92834", fontSize = 12.sp, color = Color(0xFF3F484D))
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text("$${price}", fontWeight = FontWeight.Bold, color = Color(0xFF004D64), fontSize = 14.sp)
+                Text("PAID", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF006972))
             }
         }
     }
