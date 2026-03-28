@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +29,8 @@ import coil.compose.AsyncImage
 import com.thevault.app.data.Subscription
 import com.thevault.app.ui.dashboard.getIconForName
 import com.thevault.app.ui.theme.TheVaultTheme
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun SubscriptionDetailsScreen(
@@ -83,6 +86,17 @@ fun SubscriptionDetailsContent(
                 }
             }
         } else {
+            val formattedNextBillingDate = remember(sub.nextBillingDate) {
+                try {
+                    val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val outputFormat = SimpleDateFormat("MMM dd", Locale.getDefault())
+                    val date = inputFormat.parse(sub.nextBillingDate)
+                    if (date != null) outputFormat.format(date) else sub.nextBillingDate
+                } catch (e: Exception) {
+                    sub.nextBillingDate
+                }
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -179,7 +193,7 @@ fun SubscriptionDetailsContent(
                             Box(modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.2f)).padding(8.dp)) {
                                 Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(16.dp))
                             Column {
                                 Text("Provider Portal", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
                                 Text(if (sub.manageUrl != null) "Manage" else "No URL", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
@@ -195,22 +209,7 @@ fun SubscriptionDetailsContent(
                     ) {
                         Column {
                             Text("NEXT BILLING", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3F484D))
-                            Text("Oct 24", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF004D64))
-                        }
-                    }
-                }
-
-                // History
-                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("Payment History", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        TextButton(onClick = { }) {
-                            Text("Download All", color = Color(0xFF006972))
-                        }
-                    }
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        repeat(3) {
-                            HistoryItem(sub.price)
+                            Text(formattedNextBillingDate, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF004D64))
                         }
                     }
                 }
@@ -227,32 +226,6 @@ fun SubscriptionDetailsContent(
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun HistoryItem(price: Double) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(16.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFE4E8F1)).padding(8.dp)) {
-                Icon(Icons.Default.DateRange, contentDescription = null)
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text("September 24, 2023", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text("Invoice #NFLX-92834", fontSize = 12.sp, color = Color(0xFF3F484D))
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text("$${price}", fontWeight = FontWeight.Bold, color = Color(0xFF004D64), fontSize = 14.sp)
-                Text("PAID", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF006972))
             }
         }
     }

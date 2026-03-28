@@ -32,7 +32,7 @@ class AddSubscriptionViewModel @Inject constructor(
                 status = "Active",
                 nextBillingDate = renewalDate,
                 icon = "star", // Default icon
-                manageUrl = if (manageUrl.isNotBlank()) manageUrl else null
+                manageUrl = manageUrl.ifBlank { null }
             )
             repository.addSubscription(subscription)
             _event.emit(AddSubscriptionEvent.SaveSuccess)
