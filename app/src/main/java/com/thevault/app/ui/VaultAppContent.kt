@@ -12,11 +12,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.thevault.app.ui.add.AddSubscriptionScreen
 import com.thevault.app.ui.dashboard.DashboardScreen
 import com.thevault.app.ui.dashboard.VaultBottomBar
 import com.thevault.app.ui.details.SubscriptionDetailsScreen
 import com.thevault.app.ui.list.SubscriptionsListScreen
+import com.thevault.app.ui.notifications.NotificationsScreen
+import com.thevault.app.ui.settings.SettingsScreen
 
 @Composable
 fun VaultAppContent() {
@@ -55,20 +58,33 @@ fun VaultAppContent() {
         ) {
             composable("dashboard") {
                 DashboardScreen(
-                    onNavigateToDetails = { id -> navController.navigate("details/$id") }
+                    onNavigateToDetails = { id -> navController.navigate("details/$id") },
+                    onNavigateToSettings = { navController.navigate("settings") },
+                    onNavigateToNotifications = { navController.navigate("notifications") }
                 )
             }
             composable("subscriptions") {
                 SubscriptionsListScreen(
-                    onNavigateToDetails = { id -> navController.navigate("details/$id") }
+                    onNavigateToDetails = { id -> navController.navigate("details/$id") },
+                    onNavigateToAdd = { navController.navigate("add") }
                 )
             }
             composable("add") {
                 AddSubscriptionScreen(onNavigateBack = { navController.popBackStack() })
             }
+            composable("settings") {
+                SettingsScreen(onNavigateBack = { navController.popBackStack() })
+            }
+            composable("notifications") {
+                NotificationsScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToDetails = { id -> navController.navigate("details/$id") }
+                )
+            }
             composable(
                 "details/{id}",
-                arguments = listOf(navArgument("id") { type = NavType.StringType })
+                arguments = listOf(navArgument("id") { type = NavType.StringType }),
+                deepLinks = listOf(navDeepLink { uriPattern = "thevault://details/{id}" })
             ) { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("id") ?: ""
                 SubscriptionDetailsScreen(id = id, onNavigateBack = { navController.popBackStack() })

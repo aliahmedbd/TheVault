@@ -3,6 +3,7 @@ package com.thevault.app.di
 import android.content.Context
 import androidx.room.Room
 import com.thevault.app.data.AppDatabase
+import com.thevault.app.data.NotificationDao
 import com.thevault.app.data.SubscriptionDao
 import dagger.Module
 import dagger.Provides
@@ -32,5 +33,10 @@ object DatabaseModule {
     @Provides
     fun provideSubscriptionDao(database: AppDatabase): SubscriptionDao {
         return database.subscriptionDao()
+    }
+
+    @Provides
+    fun provideNotificationDao(database: AppDatabase): NotificationDao {
+        return database.notificationDao()
     }
 }

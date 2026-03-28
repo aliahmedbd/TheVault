@@ -1,6 +1,7 @@
 package com.thevault.app.ui.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -32,22 +33,34 @@ import com.thevault.app.ui.theme.TheVaultTheme
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
-    onNavigateToDetails: (String) -> Unit
+    onNavigateToDetails: (String) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToNotifications: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     DashboardContent(
         state = state,
-        onNavigateToDetails = onNavigateToDetails
+        onNavigateToDetails = onNavigateToDetails,
+        onNavigateToSettings = onNavigateToSettings,
+        onNavigateToNotifications = onNavigateToNotifications
     )
 }
 
 @Composable
 fun DashboardContent(
     state: DashboardState,
-    onNavigateToDetails: (String) -> Unit
+    onNavigateToDetails: (String) -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToNotifications: () -> Unit
 ) {
     Scaffold(
-        topBar = { VaultTopBar() }
+        topBar = { 
+            VaultTopBar(
+                unreadCount = state.unreadNotificationCount,
+                onSettingsClick = onNavigateToSettings,
+                onNotificationsClick = onNavigateToNotifications
+            ) 
+        }
     ) { padding ->
         if (state.subscriptions.isEmpty() && !state.isLoading) {
             Box(
@@ -111,7 +124,11 @@ fun DashboardContent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VaultTopBar() {
+fun VaultTopBar(
+    unreadCount: Int,
+    onSettingsClick: () -> Unit,
+    onNotificationsClick: () -> Unit
+) {
     TopAppBar(
         title = {
             Text(
@@ -122,14 +139,26 @@ fun VaultTopBar() {
             )
         },
         actions = {
-            IconButton(onClick = { }) {
-                Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+            BadgedBox(
+                badge = {
+                    if (unreadCount > 0) {
+                        Badge {
+                            Text(unreadCount.toString())
+                        }
+                    }
+                }
+            ) {
+                IconButton(onClick = onNotificationsClick) {
+                    Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+                }
             }
+            
             Box(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
                     .background(Color.LightGray)
+                    .clickable { onSettingsClick() }
             ) {
                 AsyncImage(
                     model = "https://lh3.googleusercontent.com/aida-public/AB6AXuDQsEBxzjypyD-uQjEDempgexehAeNF2rDz7Tb2W4qIX-2QwuPhBJuFmJFqhqMW2akGH9EIC9BFuYgxpoULLcRrRuh-F8hS-TrZUbv5n-WCbR7nYUmyUjnFS_PB87RSNh5F18pVaiYqhaTZt3rXBg-plGnqUpAPefd7malqNXsupX6L1hfOA5wXNLy-Kkg6bIBWqL_k2Fis4QxYFyGb6w48DG1jyu7dTahw5m4gTbCDPWyVSvki0Uo5MzMCBuEiuGG2gti1rNnaAVI",
@@ -137,7 +166,10 @@ fun VaultTopBar() {
                     contentScale = ContentScale.Crop
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            IconButton(onClick = onSettingsClick) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
         }
     )
 }
@@ -448,9 +480,12 @@ fun DashboardPreview() {
             state = DashboardState(
                 subscriptions = listOf(sampleSub),
                 totalMonthlySpend = 15.99,
-                savedThisMonth = 0.0
+                savedThisMonth = 0.0,
+                unreadNotificationCount = 2
             ),
-            onNavigateToDetails = {}
+            onNavigateToDetails = {},
+            onNavigateToSettings = {},
+            onNavigateToNotifications = {}
         )
     }
 }
@@ -463,9 +498,12 @@ fun DashboardEmptyPreview() {
             state = DashboardState(
                 subscriptions = emptyList(),
                 totalMonthlySpend = 0.0,
-                savedThisMonth = 0.0
+                savedThisMonth = 0.0,
+                unreadNotificationCount = 0
             ),
-            onNavigateToDetails = {}
+            onNavigateToDetails = {},
+            onNavigateToSettings = {},
+            onNavigateToNotifications = {}
         )
     }
 }

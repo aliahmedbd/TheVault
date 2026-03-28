@@ -2,6 +2,7 @@ package com.thevault.app.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.thevault.app.data.NotificationRepository
 import com.thevault.app.domain.DeleteSubscriptionUseCase
 import com.thevault.app.domain.GetSubscriptionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,7 +13,8 @@ import javax.inject.Inject
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getSubscriptionsUseCase: GetSubscriptionsUseCase,
-    private val deleteSubscriptionUseCase: DeleteSubscriptionUseCase
+    private val deleteSubscriptionUseCase: DeleteSubscriptionUseCase,
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DashboardState())
@@ -20,6 +22,7 @@ class DashboardViewModel @Inject constructor(
 
     init {
         loadSubscriptions()
+        observeUnreadNotifications()
     }
 
     private fun loadSubscriptions() {
@@ -37,6 +40,14 @@ class DashboardViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun observeUnreadNotifications() {
+        notificationRepository.getUnreadCount()
+            .onEach { count ->
+                _state.update { it.copy(unreadNotificationCount = count) }
+            }
+            .launchIn(viewModelScope)
     }
 
     fun deleteSubscription(id: String) {

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thevault.app.data.Subscription
 import com.thevault.app.data.SubscriptionRepository
+import com.thevault.app.notifications.NotificationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -13,7 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddSubscriptionViewModel @Inject constructor(
-    private val repository: SubscriptionRepository
+    private val repository: SubscriptionRepository,
+    private val notificationScheduler: NotificationScheduler
 ) : ViewModel() {
 
     private val _event = MutableSharedFlow<AddSubscriptionEvent>()
@@ -35,6 +37,10 @@ class AddSubscriptionViewModel @Inject constructor(
                 manageUrl = manageUrl.ifBlank { null }
             )
             repository.addSubscription(subscription)
+            
+            // Trigger an immediate check for notifications after adding a new subscription
+            notificationScheduler.runImmediateCheck()
+
             _event.emit(AddSubscriptionEvent.SaveSuccess)
         }
     }

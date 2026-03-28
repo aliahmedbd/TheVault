@@ -28,6 +28,7 @@ import com.thevault.app.ui.theme.TheVaultTheme
 @Composable
 fun SubscriptionsListScreen(
     onNavigateToDetails: (String) -> Unit,
+    onNavigateToAdd: () -> Unit,
     viewModel: SubscriptionsListViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -47,7 +48,7 @@ fun SubscriptionsListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { },
+                onClick = onNavigateToAdd,
                 containerColor = Color(0xFF004D64),
                 contentColor = Color.White,
                 shape = RoundedCornerShape(16.dp)
@@ -133,6 +134,6 @@ fun SubscriptionsListPreview() {
         icon = "play_circle"
     )
     TheVaultTheme {
-        SubscriptionsListScreen(onNavigateToDetails = {})
+        SubscriptionsListScreen(onNavigateToDetails = {}, onNavigateToAdd = {})
     }
 }

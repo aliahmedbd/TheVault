@@ -6,6 +6,7 @@ data class DashboardState(
     val subscriptions: List<Subscription> = emptyList(),
     val totalMonthlySpend: Double = 0.0,
     val savedThisMonth: Double = 0.0,
+    val unreadNotificationCount: Int = 0,
     val isLoading: Boolean = false
 )
 
