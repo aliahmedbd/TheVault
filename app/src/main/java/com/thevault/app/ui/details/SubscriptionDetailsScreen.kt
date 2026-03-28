@@ -33,6 +33,7 @@ import java.util.Locale
 fun SubscriptionDetailsScreen(
     id: String,
     onNavigateBack: () -> Unit,
+    onNavigateToEdit: (String) -> Unit,
     viewModel: SubscriptionDetailsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -40,6 +41,7 @@ fun SubscriptionDetailsScreen(
     SubscriptionDetailsContent(
         state = state,
         onNavigateBack = onNavigateBack,
+        onEditClick = { onNavigateToEdit(id) },
         onDeleteClick = {
             viewModel.deleteSubscription()
             onNavigateBack()
@@ -52,6 +54,7 @@ fun SubscriptionDetailsScreen(
 fun SubscriptionDetailsContent(
     state: SubscriptionDetailsState,
     onNavigateBack: () -> Unit,
+    onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     val sub = state.subscription
@@ -92,6 +95,9 @@ fun SubscriptionDetailsContent(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onEditClick) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    }
                     IconButton(onClick = { }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications")
                     }
@@ -253,32 +259,6 @@ fun SubscriptionDetailsContent(
     }
 }
 
-@Composable
-fun HistoryItem(price: Double) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(16.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFFE4E8F1)).padding(8.dp)) {
-                Icon(Icons.Default.DateRange, contentDescription = null)
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text("September 24, 2023", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text("Invoice #NFLX-92834", fontSize = 12.sp, color = Color(0xFF3F484D))
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text("$${price}", fontWeight = FontWeight.Bold, color = Color(0xFF004D64), fontSize = 14.sp)
-                Text("PAID", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color(0xFF006972))
-            }
-        }
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun SubscriptionDetailsPreview() {
@@ -297,6 +277,7 @@ fun SubscriptionDetailsPreview() {
         SubscriptionDetailsContent(
             state = SubscriptionDetailsState(subscription = sampleSub),
             onNavigateBack = {},
+            onEditClick = {},
             onDeleteClick = {}
         )
     }

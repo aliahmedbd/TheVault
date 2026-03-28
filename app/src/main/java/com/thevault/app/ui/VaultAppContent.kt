@@ -28,8 +28,10 @@ fun VaultAppContent() {
     val currentDestination = navBackStackEntry?.destination
 
     // Define which routes should show the bottom bar
-    val showBottomBar = when (currentDestination?.route) {
-        "dashboard", "subscriptions", "add" -> true
+    val showBottomBar = when {
+        currentDestination?.route == "dashboard" -> true
+        currentDestination?.route == "subscriptions" -> true
+        currentDestination?.route?.startsWith("add") == true -> true
         else -> false
     }
 
@@ -37,7 +39,10 @@ fun VaultAppContent() {
         bottomBar = {
             if (showBottomBar) {
                 VaultBottomBar(
-                    currentRoute = currentDestination?.route ?: "dashboard",
+                    currentRoute = when {
+                        currentDestination?.route?.startsWith("add") == true -> "add"
+                        else -> currentDestination?.route ?: "dashboard"
+                    },
                     onNavigate = { route ->
                         navController.navigate(route) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -69,7 +74,14 @@ fun VaultAppContent() {
                     onNavigateToAdd = { navController.navigate("add") }
                 )
             }
-            composable("add") {
+            composable(
+                route = "add?id={id}",
+                arguments = listOf(navArgument("id") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null 
+                })
+            ) {
                 AddSubscriptionScreen(onNavigateBack = { navController.popBackStack() })
             }
             composable("settings") {
@@ -87,7 +99,11 @@ fun VaultAppContent() {
                 deepLinks = listOf(navDeepLink { uriPattern = "thevault://details/{id}" })
             ) { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("id") ?: ""
-                SubscriptionDetailsScreen(id = id, onNavigateBack = { navController.popBackStack() })
+                SubscriptionDetailsScreen(
+                    id = id, 
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToEdit = { subId -> navController.navigate("add?id=$subId") }
+                )
             }
         }
     }
