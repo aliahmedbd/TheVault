@@ -33,10 +33,7 @@ fun AddSubscriptionScreen(
     onNavigateBack: () -> Unit,
     viewModel: AddSubscriptionViewModel = hiltViewModel()
 ) {
-    var name by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
-    var renewalDate by remember { mutableStateOf("") }
-    var manageUrl by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
     
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
@@ -56,7 +53,7 @@ fun AddSubscriptionScreen(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        renewalDate = sdf.format(Date(millis))
+                        viewModel.onRenewalDateChange(sdf.format(Date(millis)))
                     }
                     showDatePicker = false
                 }) {
@@ -76,7 +73,7 @@ fun AddSubscriptionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("The Vault", fontWeight = FontWeight.Black) },
+                title = { Text(if (uiState.isEditing) "Edit Subscription" else "The Vault", fontWeight = FontWeight.Black) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -102,7 +99,7 @@ fun AddSubscriptionScreen(
             
             Column {
                 Text(
-                    "Add Subscription",
+                    if (uiState.isEditing) "Edit Subscription" else "Add Subscription",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color(0xFF004D64)
@@ -121,17 +118,28 @@ fun AddSubscriptionScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(32.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                    VaultTextField(label = "Subscription Name", value = name, onValueChange = { name = it }, placeholder = "e.g. Netflix")
+                    VaultTextField(
+                        label = "Subscription Name",
+                        value = uiState.name,
+                        onValueChange = viewModel::onNameChange,
+                        placeholder = "e.g. Netflix"
+                    )
                     
                     Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                         Box(modifier = Modifier.weight(1f)) {
-                            VaultTextField(label = "Monthly Price", value = price, onValueChange = { price = it }, placeholder = "0.00", prefix = "$")
+                            VaultTextField(
+                                label = "Monthly Price",
+                                value = uiState.price,
+                                onValueChange = viewModel::onPriceChange,
+                                placeholder = "0.00",
+                                prefix = "$"
+                            )
                         }
                         Box(modifier = Modifier.weight(1f)) {
                             VaultTextField(
                                 label = "Renewal Date",
-                                value = renewalDate,
-                                onValueChange = { renewalDate = it },
+                                value = uiState.renewalDate,
+                                onValueChange = viewModel::onRenewalDateChange,
                                 placeholder = "YYYY-MM-DD",
                                 readOnly = true,
                                 modifier = Modifier.clickable { showDatePicker = true }
@@ -139,7 +147,12 @@ fun AddSubscriptionScreen(
                         }
                     }
 
-                    VaultTextField(label = "Manage URL (Optional)", value = manageUrl, onValueChange = { manageUrl = it }, placeholder = "https://...")
+                    VaultTextField(
+                        label = "Manage URL (Optional)",
+                        value = uiState.manageUrl,
+                        onValueChange = viewModel::onManageUrlChange,
+                        placeholder = "https://..."
+                    )
                 }
             }
 
@@ -181,7 +194,7 @@ fun AddSubscriptionScreen(
             // Action Buttons
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(
-                    onClick = { viewModel.saveSubscription(name, price, renewalDate, manageUrl) },
+                    onClick = { viewModel.saveSubscription() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp),
@@ -190,7 +203,7 @@ fun AddSubscriptionScreen(
                 ) {
                     Icon(Icons.Default.Save, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Save Subscription", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(if (uiState.isEditing) "Update Subscription" else "Save Subscription", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
                 OutlinedButton(
                     onClick = onNavigateBack,
