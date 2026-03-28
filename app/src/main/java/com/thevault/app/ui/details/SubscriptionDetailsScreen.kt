@@ -236,21 +236,6 @@ fun SubscriptionDetailsContent(
                     }
                 }
 
-                // History
-                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("Payment History", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        TextButton(onClick = { }) {
-                            Text("Download All", color = Color(0xFF006972))
-                        }
-                    }
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        repeat(3) {
-                            HistoryItem(sub.price)
-                        }
-                    }
-                }
-
                 // Delete
                 TextButton(
                     onClick = { showDeleteDialog = true },
