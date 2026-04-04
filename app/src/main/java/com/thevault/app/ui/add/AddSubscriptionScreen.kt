@@ -3,7 +3,20 @@ package com.thevault.app.ui.add
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -11,8 +24,34 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,10 +61,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import com.thevault.app.data.PopularSubscription
+import com.thevault.app.ui.dashboard.getIconForName
 import com.thevault.app.ui.theme.TheVaultTheme
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,6 +151,15 @@ fun AddSubscriptionScreen(
                     "Input your recurring payment details to start tracking in your vault.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF3F484D)
+                )
+            }
+
+            if (!uiState.isEditing) {
+                PopularSubscriptionsSection(
+                    populars = uiState.popularSubscriptions,
+                    searchQuery = uiState.popularSearchQuery,
+                    onSearchQueryChange = viewModel::onSearchQueryChange,
+                    onSelected = viewModel::onPopularSubscriptionSelected
                 )
             }
 
@@ -218,6 +270,115 @@ fun AddSubscriptionScreen(
             }
             
             Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+fun PopularSubscriptionsSection(
+    populars: List<PopularSubscription>,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onSelected: (PopularSubscription) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Popular Services",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF004D64)
+            )
+        }
+
+        TextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChange,
+            placeholder = { Text("Search popular services...") },
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)),
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = Color(0xFFDEE3EB),
+                focusedContainerColor = Color.White,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color(0xFF004D64)
+            ),
+            singleLine = true
+        )
+
+        if (populars.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(140.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No matching services found", color = Color.Gray)
+            }
+        } else {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 8.dp)
+            ) {
+                items(populars) { popular ->
+                    PopularItem(popular = popular, onClick = { onSelected(popular) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PopularItem(popular: PopularSubscription, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .size(width = 120.dp, height = 140.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF0F4FD)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (popular.logoUrl != null) {
+                    AsyncImage(
+                        model = popular.logoUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().padding(8.dp)
+                    )
+                } else {
+                    Icon(
+                        getIconForName(popular.icon),
+                        contentDescription = null,
+                        tint = Color(0xFF004D64),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                popular.name,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                color = Color(0xFF004D64)
+            )
+            Text(
+                "$${popular.defaultPrice}",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
         }
     }
 }
