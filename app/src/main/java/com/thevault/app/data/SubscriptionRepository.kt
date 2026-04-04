@@ -6,7 +6,8 @@ import javax.inject.Singleton
 
 @Singleton
 class SubscriptionRepository @Inject constructor(
-    private val subscriptionDao: SubscriptionDao
+    private val subscriptionDao: SubscriptionDao,
+    private val popularSubscriptionDataSource: PopularSubscriptionDataSource
 ) {
     fun getAllSubscriptions(): Flow<List<Subscription>> = subscriptionDao.getAllSubscriptions()
 
@@ -22,5 +23,11 @@ class SubscriptionRepository @Inject constructor(
 
     suspend fun deleteSubscription(id: String) {
         subscriptionDao.deleteSubscriptionById(id)
+    }
+
+    fun getPopularSubscriptions(query: String = ""): List<PopularSubscription> {
+        val all = popularSubscriptionDataSource.getPopularSubscriptions()
+        if (query.isBlank()) return all
+        return all.filter { it.name.contains(query, ignoreCase = true) }
     }
 }
