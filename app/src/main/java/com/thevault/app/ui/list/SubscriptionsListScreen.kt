@@ -3,9 +3,7 @@ package com.thevault.app.ui.list
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -33,8 +31,6 @@ fun SubscriptionsListScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
-    
-    val filters = listOf("All", "Monthly", "Yearly", "Entertainment", "SaaS", "Tech")
 
     Scaffold(
         topBar = {
@@ -102,20 +98,6 @@ fun SubscriptionsListScreen(
                         ),
                         singleLine = true
                     )
-                }
-
-                // Filters
-                item {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(filters) { filter ->
-                            FilterChip(
-                                selected = filter == "All",
-                                onClick = { },
-                                label = { Text(filter, fontWeight = FontWeight.Bold) },
-                                shape = CircleShape
-                            )
-                        }
-                    }
                 }
 
                 // List
