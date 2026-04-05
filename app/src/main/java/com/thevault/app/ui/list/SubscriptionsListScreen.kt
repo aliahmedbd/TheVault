@@ -3,9 +3,7 @@ package com.thevault.app.ui.list
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -32,8 +30,7 @@ fun SubscriptionsListScreen(
     viewModel: SubscriptionsListViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    var search by remember { mutableStateOf("") }
-    val filters = listOf("All", "Monthly", "Yearly", "Entertainment", "SaaS", "Tech")
+    val searchQuery by viewModel.searchQuery.collectAsState()
 
     Scaffold(
         topBar = {
@@ -57,7 +54,7 @@ fun SubscriptionsListScreen(
             }
         }
     ) { padding ->
-        if (state.subscriptions.isEmpty() && !state.isLoading) {
+        if (state.subscriptions.isEmpty() && !state.isLoading && searchQuery.isBlank()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text("Your vault is empty.", color = Color.Gray)
             }
@@ -81,37 +78,42 @@ fun SubscriptionsListScreen(
                 // Search
                 item {
                     TextField(
-                        value = search,
-                        onValueChange = { search = it },
+                        value = searchQuery,
+                        onValueChange = { viewModel.onSearchQueryChange(it) },
                         placeholder = { Text("Search services...") },
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)),
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                                }
+                            }
+                        },
                         colors = TextFieldDefaults.colors(
                             unfocusedContainerColor = Color(0xFFDEE3EB),
                             focusedContainerColor = Color.White,
                             unfocusedIndicatorColor = Color.Transparent,
                             focusedIndicatorColor = Color(0xFF004D64)
-                        )
+                        ),
+                        singleLine = true
                     )
                 }
 
-                // Filters
-                item {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(filters) { filter ->
-                            FilterChip(
-                                selected = filter == "All",
-                                onClick = { },
-                                label = { Text(filter, fontWeight = FontWeight.Bold) },
-                                shape = CircleShape
-                            )
+                // List
+                if (state.subscriptions.isEmpty() && !state.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(top = 32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No services match your search.", color = Color.Gray)
                         }
                     }
-                }
-
-                // List
-                items(state.subscriptions) { sub ->
-                    SubscriptionListItem(sub, onNavigateToDetails)
+                } else {
+                    items(state.subscriptions) { sub ->
+                        SubscriptionListItem(sub, onNavigateToDetails)
+                    }
                 }
 
                 item { Spacer(modifier = Modifier.height(32.dp)) }
