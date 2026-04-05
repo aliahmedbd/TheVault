@@ -14,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.thevault.app.ui.add.AddSubscriptionScreen
+import com.thevault.app.ui.calendar.CalendarScreen
 import com.thevault.app.ui.dashboard.DashboardScreen
 import com.thevault.app.ui.dashboard.VaultBottomBar
 import com.thevault.app.ui.details.SubscriptionDetailsScreen
@@ -65,7 +66,9 @@ fun VaultAppContent() {
                 DashboardScreen(
                     onNavigateToDetails = { id -> navController.navigate("details/$id") },
                     onNavigateToSettings = { navController.navigate("settings") },
-                    onNavigateToNotifications = { navController.navigate("notifications") }
+                    onNavigateToNotifications = { navController.navigate("notifications") },
+                    onNavigateToCalendar = { navController.navigate("calendar") },
+                    onNavigateToEdit = { id -> navController.navigate("add?id=$id") }
                 )
             }
             composable("subscriptions") {
@@ -89,6 +92,12 @@ fun VaultAppContent() {
             }
             composable("notifications") {
                 NotificationsScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToDetails = { id -> navController.navigate("details/$id") }
+                )
+            }
+            composable("calendar") {
+                CalendarScreen(
                     onNavigateBack = { navController.popBackStack() },
                     onNavigateToDetails = { id -> navController.navigate("details/$id") }
                 )

@@ -41,6 +41,9 @@ class SubscriptionNotificationWorker @AssistedInject constructor(
                     val diffInDays = TimeUnit.MILLISECONDS.toDays(diffInMillis).toInt()
 
                     if (diffInDays in 0..7) {
+                        // Create a unique ID based on subscription and billing date to avoid duplicates
+                        val notificationId = "${subscription.id}_${subscription.nextBillingDate}"
+                        
                         val title = "Subscription Reminder"
                         val message = "${subscription.name} subscription is ending within $diffInDays days"
                         
@@ -54,7 +57,7 @@ class SubscriptionNotificationWorker @AssistedInject constructor(
                         // Save to database for in-app list
                         notificationRepository.insertNotification(
                             Notification(
-                                id = UUID.randomUUID().toString(),
+                                id = notificationId,
                                 subscriptionId = subscription.id,
                                 title = title,
                                 message = message,

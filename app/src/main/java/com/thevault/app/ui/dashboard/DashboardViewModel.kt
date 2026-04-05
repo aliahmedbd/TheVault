@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.thevault.app.data.NotificationRepository
 import com.thevault.app.domain.DeleteSubscriptionUseCase
 import com.thevault.app.domain.GetSubscriptionsUseCase
+import com.thevault.app.domain.GetUpcomingSubscriptionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -13,6 +14,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val getSubscriptionsUseCase: GetSubscriptionsUseCase,
+    private val getUpcomingSubscriptionsUseCase: GetUpcomingSubscriptionsUseCase,
     private val deleteSubscriptionUseCase: DeleteSubscriptionUseCase,
     private val notificationRepository: NotificationRepository
 ) : ViewModel() {
@@ -22,6 +24,7 @@ class DashboardViewModel @Inject constructor(
 
     init {
         loadSubscriptions()
+        loadUpcomingSubscriptions()
         observeUnreadNotifications()
     }
 
@@ -38,6 +41,14 @@ class DashboardViewModel @Inject constructor(
                         isLoading = false
                     )
                 }
+            }
+        }
+    }
+
+    private fun loadUpcomingSubscriptions() {
+        viewModelScope.launch {
+            getUpcomingSubscriptionsUseCase().collect { upcoming ->
+                _state.update { it.copy(upcomingSubscriptions = upcoming) }
             }
         }
     }

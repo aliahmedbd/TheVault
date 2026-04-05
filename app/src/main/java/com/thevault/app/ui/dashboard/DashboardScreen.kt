@@ -11,9 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,20 +27,28 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.thevault.app.data.Subscription
 import com.thevault.app.ui.theme.TheVaultTheme
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     onNavigateToDetails: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToNotifications: () -> Unit
+    onNavigateToNotifications: () -> Unit,
+    onNavigateToCalendar: () -> Unit,
+    onNavigateToEdit: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     DashboardContent(
         state = state,
         onNavigateToDetails = onNavigateToDetails,
         onNavigateToSettings = onNavigateToSettings,
-        onNavigateToNotifications = onNavigateToNotifications
+        onNavigateToNotifications = onNavigateToNotifications,
+        onNavigateToCalendar = onNavigateToCalendar,
+        onEditClick = onNavigateToEdit,
+        onDeleteClick = { viewModel.deleteSubscription(it) }
     )
 }
 
@@ -51,8 +57,37 @@ fun DashboardContent(
     state: DashboardState,
     onNavigateToDetails: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToNotifications: () -> Unit
+    onNavigateToNotifications: () -> Unit,
+    onNavigateToCalendar: () -> Unit,
+    onEditClick: (String) -> Unit,
+    onDeleteClick: (String) -> Unit
 ) {
+    var subscriptionToDelete by remember { mutableStateOf<Subscription?>(null) }
+
+    if (subscriptionToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { subscriptionToDelete = null },
+            title = { Text("Unlink Subscription") },
+            text = { Text("Are you sure you want to remove ${subscriptionToDelete?.name} from your vault?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        subscriptionToDelete?.id?.let { onDeleteClick(it) }
+                        subscriptionToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFBA1A1A))
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { subscriptionToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = { 
             VaultTopBar(
@@ -105,9 +140,14 @@ fun DashboardContent(
                 }
 
                 // Upcoming Renewals
-                if (state.subscriptions.isNotEmpty()) {
+                if (state.upcomingSubscriptions.isNotEmpty()) {
                     item {
-                        UpcomingRenewalsSection(state.subscriptions)
+                        UpcomingRenewalsSection(
+                            subscriptions = state.upcomingSubscriptions,
+                            onViewCalendarClick = onNavigateToCalendar,
+                            onEditClick = onEditClick,
+                            onDeleteClick = { subscriptionToDelete = it }
+                        )
                     }
                 }
 
@@ -153,19 +193,6 @@ fun VaultTopBar(
                 }
             }
             
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(Color.LightGray)
-                    .clickable { onSettingsClick() }
-            ) {
-                AsyncImage(
-                    model = "https://lh3.googleusercontent.com/aida-public/AB6AXuDQsEBxzjypyD-uQjEDempgexehAeNF2rDz7Tb2W4qIX-2QwuPhBJuFmJFqhqMW2akGH9EIC9BFuYgxpoULLcRrRuh-F8hS-TrZUbv5n-WCbR7nYUmyUjnFS_PB87RSNh5F18pVaiYqhaTZt3rXBg-plGnqUpAPefd7malqNXsupX6L1hfOA5wXNLy-Kkg6bIBWqL_k2Fis4QxYFyGb6w48DG1jyu7dTahw5m4gTbCDPWyVSvki0Uo5MzMCBuEiuGG2gti1rNnaAVI",
-                    contentDescription = "Profile",
-                    contentScale = ContentScale.Crop
-                )
-            }
             IconButton(onClick = onSettingsClick) {
                 Icon(Icons.Default.Settings, contentDescription = "Settings")
             }
@@ -245,7 +272,12 @@ fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun UpcomingRenewalsSection(subscriptions: List<Subscription>) {
+fun UpcomingRenewalsSection(
+    subscriptions: List<Subscription>,
+    onViewCalendarClick: () -> Unit,
+    onEditClick: (String) -> Unit,
+    onDeleteClick: (Subscription) -> Unit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -257,7 +289,7 @@ fun UpcomingRenewalsSection(subscriptions: List<Subscription>) {
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.ExtraBold
             )
-            TextButton(onClick = { }) {
+            TextButton(onClick = onViewCalendarClick) {
                 Text("View Calendar", color = Color(0xFF006972), fontWeight = FontWeight.SemiBold)
             }
         }
@@ -266,14 +298,41 @@ fun UpcomingRenewalsSection(subscriptions: List<Subscription>) {
             contentPadding = PaddingValues(end = 24.dp)
         ) {
             items(subscriptions) { sub ->
-                RenewalCard(sub)
+                RenewalCard(
+                    sub = sub,
+                    onEditClick = { onEditClick(sub.id) },
+                    onDeleteClick = { onDeleteClick(sub) }
+                )
             }
         }
     }
 }
 
 @Composable
-fun RenewalCard(sub: Subscription) {
+fun RenewalCard(
+    sub: Subscription,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    val daysLeft = remember(sub.nextBillingDate) {
+        try {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val today = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.time
+            val date = dateFormat.parse(sub.nextBillingDate)
+            if (date != null) {
+                val diff = date.time - today.time
+                TimeUnit.MILLISECONDS.toDays(diff).toInt()
+            } else 0
+        } catch (e: Exception) {
+            0
+        }
+    }
+
     Box(
         modifier = Modifier
             .width(280.dp)
@@ -303,18 +362,28 @@ fun RenewalCard(sub: Subscription) {
                         modifier = Modifier.size(30.dp)
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(Color(0xFF9C4400))
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        "IN 2 DAYS",
-                        color = Color.White,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onEditClick, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color(0xFF004D64), modifier = Modifier.size(20.dp))
+                    }
+                    IconButton(onClick = onDeleteClick, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFBA1A1A), modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(if (daysLeft <= 2) Color(0xFFBA1A1A) else Color(0xFF9C4400))
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = if (daysLeft == 0) "TODAY" else "IN $daysLeft DAYS",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
             Column {
@@ -479,13 +548,17 @@ fun DashboardPreview() {
         DashboardContent(
             state = DashboardState(
                 subscriptions = listOf(sampleSub),
+                upcomingSubscriptions = listOf(sampleSub),
                 totalMonthlySpend = 15.99,
                 savedThisMonth = 0.0,
                 unreadNotificationCount = 2
             ),
             onNavigateToDetails = {},
             onNavigateToSettings = {},
-            onNavigateToNotifications = {}
+            onNavigateToNotifications = {},
+            onNavigateToCalendar = {},
+            onEditClick = {},
+            onDeleteClick = {}
         )
     }
 }
@@ -497,13 +570,17 @@ fun DashboardEmptyPreview() {
         DashboardContent(
             state = DashboardState(
                 subscriptions = emptyList(),
+                upcomingSubscriptions = emptyList(),
                 totalMonthlySpend = 0.0,
                 savedThisMonth = 0.0,
                 unreadNotificationCount = 0
             ),
             onNavigateToDetails = {},
             onNavigateToSettings = {},
-            onNavigateToNotifications = {}
+            onNavigateToNotifications = {},
+            onNavigateToCalendar = {},
+            onEditClick = {},
+            onDeleteClick = {}
         )
     }
 }
